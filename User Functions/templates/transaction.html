@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h1>Transaction</h1>
+<br></br>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Ticker</th>
+        <th scope="col"> Price ($)</th>
+        <th scope="col">Type</th>
+        <th scope="col">Quantity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">1</th>
+        <td>AAPLE</td>
+        <td>$100</td>
+        <td>BUY</td>
+        <td>10</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>MISFT</td>
+        <td>$150</td>
+        <td>SELL</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <th scope="row">3</th>
+        <td>PERIP</td>
+        <td>$120</td>
+        <td>BUY</td>
+        <td>1</td>
+      </tr>
+      <tr>
+        <th scope="row">4</th>
+        <td>GOOGL</td>
+        <td>$100</td>
+        <td>SELL</td>
+        <td>3</td>
+      </tr>
+    </tbody>
+  </table>
+
+{% endblock %}
