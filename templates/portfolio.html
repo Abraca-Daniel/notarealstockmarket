@@ -18,11 +18,14 @@
         <th>Transaction type</th>
         <th>Date/time</th>
     </tr>
+    {% for ticker, price in stock_prices.items() %}
     <tr>
-        <td>APPL</td>
-        <td>$1000</td>
+        <td>{{ ticker }}</td>
+        <td>${{ '%.2f' % price}}</td>
         <td>2024-02-29 1:30 PM</td>
     </tr>
+    {% endfor %}
 </table>
+
 
 {% endblock %}
