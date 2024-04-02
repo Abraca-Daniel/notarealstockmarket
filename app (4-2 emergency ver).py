@@ -1,7 +1,7 @@
 # Version 3/31/2024
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
-##from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.sql import func
 import random
 import os
