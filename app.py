@@ -1,9 +1,8 @@
 # Version 3/17/2024
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey
 from sqlalchemy.sql import func
-import datetime
+from sqlalchemy import ForeignKey
 import os
 app = Flask(__name__)
 app.debug = True
@@ -11,21 +10,34 @@ app.debug = True
 dasedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:94521Thwomp@localhost:3306/stocks'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy (app)
+db = SQLAlchemy(app)
 
+class User(db.Model):
+   __tablename__ = 'User'
+   userId = db.Column(db.Integer, primary_key=True, index=True)
+   first_name = db.Column(db.String(100))
+   last_name = db.Column(db.String(100))
+   username = db.Column(db.String(20))
+   email = db.Column(db.String(100))
+   password = db.Column(db.String(100))
+
+   def __init__(self, fName, lName, uName, email, password):
+       self.first_name = fName
+       self.last_name = lName
+       self.username = uName
+       self.email = email
+       self.password = password
+   
 
 class Stock(db.Model):
    __tablename__ = 'Stock'
    stockId = db.Column(db.Integer, primary_key=True, index=True)
-   ticker = db.Column(db.String(10),)
+   ticker = db.Column(db.String(10))
    price = db.Column(db.Float())
-   date = db.Column(db.DateTime, default=func.now())
 
-   def __init__(self, company, ticker, price, date):
-      self.company = company
+   def __init__(self, ticker, price):
       self.ticker = ticker
       self.price = price
-      self.date = date
 
    def __repr__(self):
       return f'{self.ticker} at {self.price}'
@@ -33,30 +45,33 @@ class Stock(db.Model):
 
 class Company(db.Model):
     __tablename__ = 'Company'
-    companyId = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(10),)
-    total_shares = db.Column(db.Integer)
+    companyId = db.Column(db.Integer, primary_key=True, index=True)
+    ticker = db.Column(db.String(10))
+    total_shares = db.Column(db.Float(), nullable=False)
     name = db.Column(db.String(100))
     
-    def __init__(self, name, ticker):
+    def __init__(self, name, ticker, total_shares):
         self.name = name
         self.ticker = ticker
+        self.total_shares = int(total_shares)
         
 
     
 class Portfolio(db.Model):
     __tablename__ = 'portfolio'
-    portfolioid = db.Column(db.Integer, primary_key=True)
-    userid = db.Column(db.Integer)
+    portfolioid = db.Column(db.Integer, primary_key=True, index=True)
+    userid = db.Column(db.Integer, ForeignKey(User.userId))
     cashBal = db.Column(db.Integer)
-    stockID = db.Column(db.Integer)
+    stockID = db.Column(db.Integer, ForeignKey(Stock.stockId))
     quantity = db.Column(db.Integer)
     purchasePrice = db.Column(db.Integer)
 
-    def __init__(self, user, cash_amount=0):
-        self.user = user
-        self.stocks = {}
-        self.cash_amount = cash_amount
+    def __init__(self, userID, cash_amount, Stock, quantity, purchasePrice):
+        self.userID = userID
+        self.cashBal = cash_amount
+        self.stockID = Stock
+        self.quantity = quantity
+        self.purchasePrice = purchasePrice
 
     def add_stock(self, stock, quantity):
         if stock.ticker not in self.stocks:
@@ -93,39 +108,33 @@ class Portfolio(db.Model):
         for transaction in self.transaction_history:
             print(transaction)
 
-class User(db.Model):
-   __tablename__ = 'User'
-   userId = db.Column(db.Integer, primary_key=True)
-   full_name = db.Column(db.String(100))
-   username = db.Column(db.String(20))
-   email = db.Column(db.String(100))
-   password = db.Column(db.String(100))
-   portfolio = db.Column(db.Integer, ForeignKey(Portfolio.portfolioid))
 
-class Transations(db.Model):
+class Transactions(db.Model):
     __tablename__ = 'Transaction_Ledger'
-    transactId = db.Column(db.Integer, primary_key=True)
+    transactId = db.Column(db.Integer, primary_key=True, index = True)
     userId = db.Column(db.Integer, ForeignKey(User.userId))
     stockId = db.Column(db.Integer, ForeignKey(Stock.stockId))
     isWalletTransact = db.Column(db.Boolean)
     portfolioId = db.Column(db.Integer, ForeignKey(Portfolio.portfolioid))
     cashValue = db.Column(db.Integer)
+    date = db.Column(db.DateTime, default=func.now())
 
-    def __init__(self, user, ticker, price, date):
-      self.user = user
-      self.ticker = ticker
-      self.price = price
-      self.date = date
+    def __init__(self, userId, stockId, walletBool, portfolioId, cashValue):
+      self.userId = userId
+      self.stockId = stockId
+      self.isWalletTransact = walletBool
+      self.portfolioId = portfolioId
+      cashValue = cashValue
 
 
-   
-    def __init__(self, full_name, username, email, password):
-      self.full_name = full_name
-      self.username = username
-      self.email = email
-      self.password = password
-      self.portfolio = Portfolio(self)
-      self.transaction_history = []
+   #
+   # def __init__(self, full_name, username, email, password):
+   #   self.full_name = full_name
+   #   self.username = username
+   #   self.email = email
+   #   self.password = password
+   #   self.portfolio = Portfolio(self)
+   #   self.transaction_history = []
 
     def buy_stock(self, stock, quantity):
         if stock.price * quantity > self.portfolio.view_balance():
@@ -199,7 +208,6 @@ class Administrator:
  #       print(f"Market open on weekdays: {weekdays}")
  #       print(f"Market closed on holidays: {holidays}")
 
-
 @app.route("/")
 def hello_world():
    return render_template('index.html')
@@ -247,7 +255,8 @@ def portfolio():
 
 @app.route("/transaction")
 def transaction():
-   return render_template('transaction.html')
+   stock = models.Stock.query.all()
+   return render_template('transaction.html', stock=stock)
 
 @app.route("/support")
 def support():
