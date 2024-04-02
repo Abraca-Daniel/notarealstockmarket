@@ -2,6 +2,15 @@
 {% block body %}
 
 <h1>Buy a Stock</h1>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li class="flash-message">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 <form method="post">
     <div class="mb-3">
       <label for="stockSymbol" class="form-label">Stock Symbol (5 character max!):</label>
@@ -17,6 +26,7 @@
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+
 <br>
 <h1>Sell a Stock</h1>
 <form method="post">
